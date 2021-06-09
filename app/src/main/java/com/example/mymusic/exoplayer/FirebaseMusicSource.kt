@@ -1,18 +1,15 @@
 package com.example.mymusic.exoplayer
 
-import android.media.browse.MediaBrowser
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
 import androidx.core.net.toUri
-import com.example.mymusic.R
 import com.example.mymusic.data.remote.MusicDatabase
 import com.example.mymusic.exoplayer.State.*
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaExtractor
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import kotlinx.coroutines.Dispatchers
@@ -23,10 +20,10 @@ class FirebaseMusicSource @Inject constructor(
     private val musicDatabase: MusicDatabase
 ) {
 
-    private var songs = emptyList<MediaMetadataCompat>()
+    var songs = emptyList<MediaMetadataCompat>()
 
     suspend fun fetchMediaData() = withContext(Dispatchers.IO){
-        state = STATE_INITILIAZING
+        state = STATE_INITIALIZING
         val allSongs = musicDatabase.getAllSongs()
         songs = allSongs.map { song ->
         MediaMetadataCompat.Builder()
@@ -38,7 +35,7 @@ class FirebaseMusicSource @Inject constructor(
             .putString(METADATA_KEY_DISPLAY_SUBTITLE, song.album)
             .build()
         }
-        state = STATE_INITILIZED
+        state = STATE_INITIALIZED
     }
 
     fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
@@ -66,11 +63,11 @@ class FirebaseMusicSource @Inject constructor(
 
     private var state: State = STATE_CREATED
     set(value) {
-        if(value == STATE_INITILIZED || value == STATE_ERROR){
+        if(value == STATE_INITIALIZED || value == STATE_ERROR){
             synchronized(onReadyListeners){
                 field = value
                 onReadyListeners.forEach { listeners->
-                    listeners(state == STATE_INITILIZED)
+                    listeners(state == STATE_INITIALIZED)
                 }
             }
         }else{
@@ -79,11 +76,11 @@ class FirebaseMusicSource @Inject constructor(
     }
 
     fun whenReady(action: (Boolean) -> Unit): Boolean{
-        if(state == STATE_CREATED || state == STATE_INITILIAZING){
+        if(state == STATE_CREATED || state == STATE_INITIALIZING){
             onReadyListeners += action
             return false
         }else{
-            action(state == STATE_INITILIZED)
+            action(state == STATE_INITIALIZED)
             return true
         }
     }
@@ -92,7 +89,7 @@ class FirebaseMusicSource @Inject constructor(
 
 enum class State {
     STATE_CREATED,
-    STATE_INITILIAZING,
-    STATE_INITILIZED,
+    STATE_INITIALIZING,
+    STATE_INITIALIZED,
     STATE_ERROR
 }

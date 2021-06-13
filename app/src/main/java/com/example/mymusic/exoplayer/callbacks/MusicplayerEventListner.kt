@@ -26,7 +26,7 @@ class MusicplayerEventListner(
         super.onPlaybackStateChanged(state)
 
         if(state == Player.STATE_READY && !musicService.exoplayer.playWhenReady){
-            musicService.stopForeground(true)
+            musicService.stopForeground(false)
             TODO("check if second condition of 'if' matters")
         }
 
